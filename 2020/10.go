@@ -5,11 +5,13 @@ import (
 	"bufio"
 	"os"
 	"log"
-	// "regexp"
 	"strconv"
 	"sort"
-	"crypto/sha256"
+	"math"
 )
+
+func Perm(r int) int {; if r >= 1 {; return r * Perm(r - 1) ;}; return 1;}
+func Comb(n int, r int) int {; return Perm(n)/(Perm(r)*Perm(n - r)); }
 
 func LinesInFile(fileName string) []string {
 	f, err := os.Open(fileName)
@@ -29,75 +31,27 @@ func LinesInFile(fileName string) []string {
 	return result
 }
 
-func perm(num int) int {
-	if num >= 1 {
-		return num * perm(num - 1)
-	}
-
-	return 1
-}
-
-func comb(n int, r int) int {
-	return perm(n) / (perm(r) * perm(n - r))
-}
-
-func Hash(arr []int) [32]byte {
-	b := make([]byte, len(arr));
-	for i, num := range arr {
-		b[i] = byte(num)
-	}
-
-	return sha256.Sum256(b)
-}
-
-var isCounted = map[[32]byte]bool{}
-
-func ResetCount(arr []int) int {
-	isCounted = map[[32]byte]bool{}
-	return CountValidArrangements(arr)
-}
-
-func CountValidArrangements(arr []int) int {
-	count := 1
-
-	if _, exists := isCounted[Hash(arr)]; exists {
-		return 0
-	} else {
-		isCounted[Hash(arr)] = true
-	}
-
-	for i := 0; i < len(arr) - 3; i++ {
-		if arr[i + 2] - arr [i] <= 3 {
-			narr := make([]int, len(arr) - 1)
-			for j := 0; j < i + 1; j++ {
-				narr[j] = arr[j]
-			}
-
-			for j := i + 1; j < len(narr); j++ {
-				narr[j] = arr[j + 1]
-			}
-
-			count += CountValidArrangements(narr)
-		}
-	}
-
-	return count
-}
-
-func SliceCount(arr []int, from int, length int) int {
-	narr := make([]int, length)
-
-	for j := from; j < from + length; j++ {
-		narr[j - from] = arr[j]
-	}
-
-	return ResetCount(narr)
-}
-
 func EffectiveCount(arr []int) int {
 	product := 1
-	consecutive := 0
 
+	sums := make([]int, 12)
+	sums[0] = 1
+	for i := 0; i < 2; {
+		sum := int(math.Pow(2, float64(i))) + 1
+		for j := 0; j <= i; j++ {
+			if j % 2 == 1 {
+				sum -= i - 2
+			}
+		}
+
+		i++; sums[i] = sum
+	}
+
+	for i := 3; i < len(sums); i++ {
+		sums[i] = sums[i - 3] + sums[i - 2] + sums[i - 1]
+	}
+
+	consecutive := 0
 	for i := 0; i < len(arr) - 2; i++ {
 		diff := arr[i + 2] - arr[i]
 
@@ -108,7 +62,7 @@ func EffectiveCount(arr []int) int {
 				product *= 2
 			}
 		} else if consecutive > 0 {
-			product *= SliceCount(arr, i - consecutive, consecutive + 3)
+			product *= sums[consecutive]
 			consecutive = 0
 		}
 	}
@@ -119,8 +73,8 @@ func EffectiveCount(arr []int) int {
 func main() {
 	fmt.Println("Day 10")
 	lines := LinesInFile("input")
-	max := 0
 
+	max := 0
 	jolts := make([]int, len(lines) + 2)
 	for i, line := range lines {
 		jolts[i], _ = strconv.Atoi(line)
@@ -129,17 +83,16 @@ func main() {
 			max = jolts[i]
 		}
 	}
+
 	jolts[len(jolts) - 2] = 0
 	jolts[len(jolts) - 1] = max + 3
 	sort.Ints(jolts)
 
 	diffs := map[int]int{}
-
 	for i := 0; i < len(jolts) - 1; i++ {
 		diffs[jolts[i+1] - jolts[i]]++
 	}
 
 	fmt.Println("Part one: ", diffs[1], "*", diffs[3], "=", diffs[1] * diffs[3])
-
 	fmt.Println("Part two: ", EffectiveCount(jolts))
 }
