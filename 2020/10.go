@@ -29,9 +29,6 @@ func LinesInFile(fileName string) []string {
 	return result
 }
 
-var adapter = 0
-var isCounted = map[[32]byte]bool{}
-
 func perm(num int) int {
 	if num >= 1 {
 		return num * perm(num - 1)
@@ -53,6 +50,13 @@ func Hash(arr []int) [32]byte {
 	return sha256.Sum256(b)
 }
 
+var isCounted = map[[32]byte]bool{}
+
+func ResetCount(arr []int) int {
+	isCounted = map[[32]byte]bool{}
+	return CountValidArrangements(arr)
+}
+
 func CountValidArrangements(arr []int) int {
 	count := 1
 
@@ -62,8 +66,7 @@ func CountValidArrangements(arr []int) int {
 		isCounted[Hash(arr)] = true
 	}
 
-	for i := 0; i < len(arr) - 4; i++ {
-
+	for i := 0; i < len(arr) - 3; i++ {
 		if arr[i + 2] - arr [i] <= 3 {
 			narr := make([]int, len(arr) - 1)
 			for j := 0; j < i + 1; j++ {
@@ -80,6 +83,40 @@ func CountValidArrangements(arr []int) int {
 	}
 
 	return count
+}
+
+func SliceCount(arr []int, from int, length int) int {
+	narr := make([]int, length)
+
+	for j := from; j < from + length; j++ {
+		narr[j - from] = arr[j]
+	}
+
+	fmt.Println(narr)
+	fmt.Println(ResetCount(narr))
+	return ResetCount(narr)
+}
+
+func EffectiveCount(arr []int) int {
+	product := 1
+	consecutive := 0
+
+	for i := 0; i < len(arr) - 2; i++ {
+		diff := arr[i + 2] - arr[i]
+
+		if diff <= 3 {
+			if diff == 2 {
+				consecutive++
+			} else {
+				product *= 2
+			}
+		} else if consecutive > 0 {
+			product *= SliceCount(arr, i - consecutive, consecutive + 3)
+			consecutive = 0
+		}
+	}
+
+	return product
 }
 
 func main() {
@@ -107,5 +144,5 @@ func main() {
 
 	fmt.Println("Part one: ", diffs[1], "*", diffs[3], "=", diffs[1] * diffs[3])
 
-	fmt.Println("Part two: ", CountValidArrangements(jolts))
+	fmt.Println("Part two: ", EffectiveCount(jolts))
 }
