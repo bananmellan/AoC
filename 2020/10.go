@@ -77,7 +77,6 @@ func CountValidArrangements(arr []int) int {
 				narr[j] = arr[j + 1]
 			}
 
-
 			count += CountValidArrangements(narr)
 		}
 	}
@@ -92,8 +91,6 @@ func SliceCount(arr []int, from int, length int) int {
 		narr[j - from] = arr[j]
 	}
 
-	fmt.Println(narr)
-	fmt.Println(ResetCount(narr))
 	return ResetCount(narr)
 }
 
