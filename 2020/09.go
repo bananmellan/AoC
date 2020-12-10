@@ -28,7 +28,7 @@ func LinesInFile(fileName string) []string {
 }
 
 func main() {
-	fmt.Println("Day 8")
+	fmt.Println("Day 9")
 	lines := LinesInFile("input")
 
 	numbers := make([]int, len(lines))
