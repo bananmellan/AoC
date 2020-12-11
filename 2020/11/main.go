@@ -12,32 +12,23 @@ import (
 
 func LinesInFile(fileName string) []string {
 	f, err := os.Open(fileName)
-	if err != nil {
-		log.Fatal(err)
-	}
+	if err != nil {; log.Fatal(err); }
 	defer f.Close()
 	scanner := bufio.NewScanner(f)
 	result := []string{}
 	for scanner.Scan() {
-		if len(scanner.Text()) == 0 {
-			continue
-		}
+		if len(scanner.Text()) == 0 {; continue; }
 		line := scanner.Text()
 		result = append(result, line)
 	}
 	return result
 }
 
-const (
-	Occupied = '#'
-	Empty    = 'L'
-	Floor    = '.'
-)
+const Occupied = '#'
+const Empty    = 'L'
+const Floor    = '.'
 
-type Pos struct {
-	x int
-	y int
-}
+type Pos struct { x int; y int }
 
 func GenLayout(lines []string) map[Pos]rune {
 	layout := map[Pos]rune{}
@@ -64,9 +55,8 @@ func IterateLayout(layout map[Pos]rune) (map[Pos]rune, int, int) {
 			{-1, -1}, {-1, 0}, {-1, 1}, {1, -1},
 		} {
 			s, ok := layout[Pos{x:keys[0] + key.x, y:keys[1] + key.y}]
-			if ok && s == Occupied {
-				occCount++
-			}
+
+			if ok && s == Occupied {; occCount++ ;}
 		}
 
 		if seat == Empty && occCount == 0 {
@@ -75,9 +65,7 @@ func IterateLayout(layout map[Pos]rune) (map[Pos]rune, int, int) {
 			nayout[key] = Empty; diff++
 		} else {
 			nayout[key] = seat
-		}
-
-		if seat == Floor {
+		}; if seat == Floor {
 			nayout[key] = Floor
 		}
 	}
@@ -103,11 +91,10 @@ func IterateRayLayout(layout map[Pos]rune) (map[Pos]rune, int, int) {
 				pos.y += keys[1]
 
 				s, ok := layout[pos]
-				if !ok || s == Empty {; break; }
-				if s == Floor {; continue; }
-				if s == Occupied {
-					occCount++; break
-				}
+
+				if s == Empty || !ok {; break; }
+				if s == Floor        {; continue; }
+				if s == Occupied     {; occCount++; break; }
 			}
 		}
 
@@ -119,28 +106,27 @@ func IterateRayLayout(layout map[Pos]rune) (map[Pos]rune, int, int) {
 			nayout[key] = seat
 		}
 
-		if seat == Floor {
-			nayout[key] = Floor
-		}
+		if seat == Floor {; nayout[key] = Floor; }
 	}
 
 	return nayout, diff, occ
 }
 
-func OccupiedSeats(layout map[Pos]rune, f func(map[Pos]rune) (map[Pos]rune, int, int)) int {
+func OccupiedSeats(
+	layout map[Pos]rune,
+	f func(map[Pos]rune) (map[Pos]rune, int, int),
+) int {
 	occupied := 0
 
 	for {
-		diff   := 0
-		newOcc := 0
+		var diff   int
+		var newOcc int
 		layout, diff, newOcc = f(layout)
 
-		if diff == 0 {; break; }
+		if diff == 0 {; return occupied; }
 
-		occupied += newOcc - (diff - newOcc)
+		occupied += 2 * newOcc - diff
 	}
-
-	return occupied
 }
 
 func main() {
