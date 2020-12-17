@@ -5,13 +5,6 @@ import (
 	"bufio"
 	"os"
 	"log"
-	// "regexp"
-	// "strconv"
-	// "strings"
-	// "sort"
-	// "math"
-	// "strings"
-	// "math/big"
 )
 
 func LinesInFile(fileName string) []string {
@@ -31,12 +24,9 @@ type Cube struct {
 	x int; y int; z int; w int
 }
 
-
-
 func main() {
 	lines := LinesInFile("input")
-	cubes := map[Cube]bool{}
-
+	var cubes map[Cube]bool
 	comb := []int{-1, 0, 1}
 	adj  := []Cube{}
 	adj4 := []Cube{}
@@ -47,42 +37,51 @@ func main() {
 					adj = append(adj, Cube{x: x, y: y, z: z})
 				}
 
+
 				for _, w := range comb {
-					adj4 = append(adj4, Cube{x: x, y: y, z: z, w: w})
+					if !(x == 0 && x == y && y == z && z == w) {
+						adj4 = append(adj4, Cube{x: x, y: y, z: z, w: w})
+					}
 				}
 			}
 		}
 	}
 
-	// Build initial cubes
-	for row, line := range lines {
-		for col, rune := range line {
-			if rune == '#' {
-				cubes[Cube{ x: col, y: row, z: 0 }] = true
+	var buildInitial func()
+	buildInitial = func() {
+		cubes = map[Cube]bool{}
+
+		// Build initial cubes
+		for row, line := range lines {
+			for col, rune := range line {
+				if rune == '#' {
+					cubes[Cube{ x: col, y: row }] = true
+				}
 			}
 		}
 	}
 
-	var neighbors func(cube Cube) []Cube
-	neighbors = func(cube Cube) []Cube {
-		result := make([]Cube, 26)
+	var neighbors func(cube Cube, adja []Cube) []Cube
+	neighbors = func(cube Cube, adja []Cube) []Cube {
+		result := []Cube{}
 
-		for i, ad := range adj {
-			result[i] = Cube{
+		for _, ad := range adja {
+			result = append(result, Cube{
 				x: cube.x + ad.x,
 				y: cube.y + ad.y,
 				z: cube.z + ad.z,
-			}
+				w: cube.w + ad.w,
+			})
 		}
 
 		return result
 	}
 
-	var countAdjacents func(cube Cube) int
-	countAdjacents = func(cube Cube) int {
+	var countAdjacents func(cube Cube, adja []Cube) int
+	countAdjacents = func(cube Cube, adja []Cube) int {
 		count := 0
 
-		for _, neighbor := range neighbors(cube) {
+		for _, neighbor := range neighbors(cube, adja) {
 			_, ok := cubes[neighbor]
 			if ok {; count++ ;}
 		}
@@ -90,25 +89,33 @@ func main() {
 		return count
 	}
 
-	for it := 0; it < 6; it++ {
-		clone := map[Cube]bool{}
+	var iterate func(adj []Cube) int
+	iterate = func(adja []Cube) int {
+		buildInitial()
 
-		for cube, _ := range cubes {
-			count := countAdjacents(cube)
-			if count == 2 || count == 3 {
-				clone[cube] = true
-			}
+		for it := 0; it < 6; it++ {
+			clone := map[Cube]bool{}
 
-			for _, neighbor := range neighbors(cube) {
-				_, ok := clone[neighbor]
-				if !ok && countAdjacents(neighbor) == 3 {
-					clone[neighbor] = true
+			for cube, _ := range cubes {
+				count := countAdjacents(cube, adja)
+				if count == 2 || count == 3 {
+					clone[cube] = true
+				}
+
+				for _, neighbor := range neighbors(cube, adja) {
+					_, ok := clone[neighbor]
+					if !ok && countAdjacents(neighbor, adja) == 3 {
+						clone[neighbor] = true
+					}
 				}
 			}
+
+			cubes = clone
 		}
 
-		cubes = clone
+		return len(cubes)
 	}
 
-	fmt.Println("Part one:", len(cubes))
+	fmt.Println("Part one:", iterate(adj))
+	fmt.Println("Part two:", iterate(adj4))
 }
