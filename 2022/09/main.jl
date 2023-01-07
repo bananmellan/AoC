@@ -29,22 +29,31 @@ function f(n)
         dir = split(line)[1]
         steps = parse(Int, split(line)[2])
 
+        tail = nothing
+
         for i ∈ 1 : steps
             rope.prev = rope.pos
             rope.pos += dirs[dir]
             head = rope
 
             tail = head
-            # @printf "(%d, %d)\n" head.pos[1] head.pos[2]
-
 
             while head.next != nothing
                 tail = head.next
 
-                vec = head.pos - tail.pos
-                if abs(vec[1]) > 1 || abs(vec[2]) > 1
+                delta = head.pos - head.prev
+                diff  = head.pos - tail.pos
+
+                if abs(diff[1]) > 1 || abs(diff[2]) > 1
                     tail.prev = tail.pos
-                    tail.pos = head.prev
+
+                    if head.prev[1] == tail.pos[1] ||
+                       head.prev[2] == tail.pos[2]
+                        tail.pos += delta
+                    else
+                        tail.pos += [sign(diff[1]) * min(abs(diff[1]), 1),
+                                     sign(diff[2]) * min(abs(diff[2]), 1)]
+                    end
                 end
 
                 head = tail
@@ -53,8 +62,6 @@ function f(n)
             push!(visited, tail.pos)
         end
     end
-
-    # println(rope)
 
     return visited
 end
