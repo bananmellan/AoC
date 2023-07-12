@@ -1,4 +1,6 @@
 input*
 *.hi
 *.o
+*.out
+sample*
 main
