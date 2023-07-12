@@ -1,8 +1,12 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 char** get_input(void) {
 	FILE *in = stdin;
 	while (fgetc(in) != EOF);
 	int size = ftell(in);
-	char *content = malloc(size);
+	char *content = malloc(size + 1);
 
 	rewind(in);
 	for (int i = 0; i < size; i++)
